@@ -1,40 +1,28 @@
-// Enemies our player must avoid
-// var Enemy = function () {
-// Variables applied to each of our instances go here,
-// we've provided one for you to get started
-
-// The image/sprite for our enemies, this uses
-// a helper we've provided to easily load images
-//    this.sprite = 'images/enemy-bug.png';
-// };
-
-// Update the enemy's position, required method for game
-// Parameter: dt, a time delta between ticks
-// Enemy.prototype.update = function (dt) {
-// You should multiply any movement by the dt parameter
-// which will ensure the game runs at the same speed for
-// all computers.
-// };
-
-// Draw the enemy on the screen, required method for game
-// Enemy.prototype.render = function () {
-//     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-// };
-
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
-
-let points = document.getElementById("points");
+const points = document.getElementById("points");
 let score = 0;
 
 class Base {
+    loadSprite(sprite) {
+        this.img = Resources.get(sprite);
+        this.width = this.img.width;
+        this.height = this.img.height;
+    }
+
     getRndInteger(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
     render() {
-        ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+        if (this.img) {
+            ctx.drawImage(this.img, this.x, this.y);
+        }
+    }
+    // Collects the center of the picture
+    getCenter() {
+        return {
+            x: Math.round(this.x) + Math.round(this.width / 2),
+            y: Math.round(this.y) + Math.round(this.height / 2)
+        };
     }
 }
 
@@ -42,15 +30,19 @@ class Enemy extends Base {
     constructor() {
         super();
         this.speed = 300;
-        this.x = this.getRndInteger(-30, 0) * 30;
+        this.x = this.getRndInteger(-30, -1) * 40;
         this.y = this.getRndInteger(1, 3) * 65;
-        this.sprite = 'images/enemy-bug.png';
+
+        // Loads Enemy image
+        Resources.onReady(function () {
+            this.loadSprite('images/enemy-bug.png');
+        }.bind(this));
     }
 
     update(dt) {
         this.x += this.speed * dt;
         if (this.x > 500) {
-            this.x = this.getRndInteger(-40, 0) * 20;
+            this.x = this.getRndInteger(-40, -1) * 40;
             this.y = this.getRndInteger(1, 3) * 65;
         }
     }
@@ -65,14 +57,17 @@ class Player extends Base {
         super();
         this.x = 200;
         this.y = 290;
-        this.sprite = 'images/char-horn-girl.png';
+        // Loads Player image
+        Resources.onReady(function () {
+            this.loadSprite('images/char-horn-girl.png');
+        }.bind(this));
 
     }
 
-    update() {
-
+    update(dt) {
+        this.checkCollisions(allEnemies);
     }
-
+    // controls with arrows, also checks boarders of canvas
     handleInput(key) {
         if (key === 'left' && this.x > 0) {
             this.x -= 100;
@@ -89,40 +84,22 @@ class Player extends Base {
             points.innerText = score;
         }
     }
-    // handleInput(key = "") {
-    //     switch (key) {
-    //         case "left":
-    //             this.x -= 100;
-    //             break;
-    //         case "right":
-    //             this.x += 100;
-    //             break;
-    //         case "up":
-    //             this.y -= 80;
-    //             break;
-    //         case "down":
-    //             this.y += 80;
-    //             break;
-    //         default:
-    //             return [this.x, this.y];
-    //     }
-    //     if (this.y < 0) {
-    //         this.reset();
-    //     }
-
-    //     if (this.y > 380 || this.x < 0 || this.x > 400) {
-    //         this.reset();
-    //     }
-    // }
-    checkCollisions(enemies, dt) {
+    // function that checks the collision of objects
+    checkCollisions(enemies) {
         enemies.forEach(enemy => {
-            let [ex, ey] = enemy.getPosition();
-            console.log(ex, ey);
-            if (ex == this.x && ey == this.y) {  
+
+            let playerCenter = this.getCenter();
+            let enemyCenter = enemy.getCenter();
+            var a = playerCenter.x - enemyCenter.x;
+            var b = playerCenter.y - enemyCenter.y;
+            var c = Math.sqrt(a * a + b * b);
+
+            if (c < 60) {
                 this.reset();
             }
         });
     }
+    // function that resets the player's position.
     reset() {
         this.x = 200;
         this.y = 290;
@@ -133,8 +110,7 @@ class Player extends Base {
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
 let player = new Player();
-let allEnemies = [new Enemy(), new Enemy(), new Enemy()];
-player.checkCollisions(allEnemies);
+let allEnemies = [new Enemy(), new Enemy(), new Enemy(), new Enemy()];
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
