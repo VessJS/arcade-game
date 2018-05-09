@@ -25,6 +25,9 @@
 // This class requires an update(), render() and
 // a handleInput() method.
 
+let points = document.getElementById("points");
+let score = 0;
+
 class Base {
     getRndInteger(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -38,21 +41,22 @@ class Base {
 class Enemy extends Base {
     constructor() {
         super();
-        this.x = this.getRndInteger(-100, 0) * 20;
-        this.y = this.getRndInteger(1, 3) * 73;
+        this.speed = 300;
+        this.x = this.getRndInteger(-30, 0) * 30;
+        this.y = this.getRndInteger(1, 3) * 65;
         this.sprite = 'images/enemy-bug.png';
     }
 
     update(dt) {
-        this.x += 300 * dt;
+        this.x += this.speed * dt;
         if (this.x > 500) {
-            this.x = this.getRndInteger(-50, 0) * 10;
-            this.y = this.getRndInteger(70, 240);
+            this.x = this.getRndInteger(-40, 0) * 20;
+            this.y = this.getRndInteger(1, 3) * 65;
         }
     }
 
     getPosition() {
-        return [this.ex, this.ey];
+        return [this.x, this.y];
     }
 }
 
@@ -64,39 +68,57 @@ class Player extends Base {
         this.sprite = 'images/char-horn-girl.png';
 
     }
+
     update() {
 
     }
 
-    handleInput(key = "") {
-        switch (key) {
-            case "left":
-                this.x -= 100;
-                break;
-            case "right":
-                this.x += 100;
-                break;
-            case "up":
-                this.y -= 80;
-                break;
-            case "down":
-                this.y += 80;
-                break;
-            default:
-                return [this.x, this.y];
+    handleInput(key) {
+        if (key === 'left' && this.x > 0) {
+            this.x -= 100;
+        } else if (key === 'right' && this.x < 400) {
+            this.x += 100;
+        } else if (key === 'up') {
+            this.y -= 80;
+        } else if (key === 'down' && this.y < 340) {
+            this.y += 80;
         }
         if (this.y < 0) {
             this.reset();
-        }
-        if (this.y > 380 || this.x < 0 || this.x > 400) {
-            this.reset();
+            score += 100;
+            points.innerText = score;
         }
     }
-    checkCollisions(enemies) {
-        enemies.forEach(enemy => {
-           let [x, y] = enemy.getPosition();
+    // handleInput(key = "") {
+    //     switch (key) {
+    //         case "left":
+    //             this.x -= 100;
+    //             break;
+    //         case "right":
+    //             this.x += 100;
+    //             break;
+    //         case "up":
+    //             this.y -= 80;
+    //             break;
+    //         case "down":
+    //             this.y += 80;
+    //             break;
+    //         default:
+    //             return [this.x, this.y];
+    //     }
+    //     if (this.y < 0) {
+    //         this.reset();
+    //     }
 
-            if (x > this.x && y > this.y) {
+    //     if (this.y > 380 || this.x < 0 || this.x > 400) {
+    //         this.reset();
+    //     }
+    // }
+    checkCollisions(enemies, dt) {
+        enemies.forEach(enemy => {
+            let [ex, ey] = enemy.getPosition();
+            console.log(ex, ey);
+            if (ex == this.x && ey == this.y) {  
                 this.reset();
             }
         });
